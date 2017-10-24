@@ -1,0 +1,8 @@
+####SCRIPT TO ADD DFS SALARIES AND OTHER INDICATORS TO THE DAILY BOXSCORES
+### INCLUDING GAME INDEX
+
+import sys
+import numpy
+import pandas
+
+
