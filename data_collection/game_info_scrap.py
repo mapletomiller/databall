@@ -2,8 +2,10 @@ import os
 import requests
 import json
 import sys
+import time
 
-HEADERS = {
+global api_headers
+api_headers = {
     'origin': ('http://stats.nba.com'),
     'user-agent': (
         'Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36'),
@@ -42,8 +44,8 @@ def lookup_team_attribute(team_info_list,attribute,team_id):
 def scrap_team_standings():
     return 0;
 
-def scrap_scoreboard(extractdate):
-    global HEADERS
+def scrap_scoreboard(extractdate,team_info):
+    global api_headers
     # headers: [
     #     "GAME_DATE_EST",
     #     "GAME_SEQUENCE",
@@ -65,19 +67,63 @@ def scrap_scoreboard(extractdate):
     # ],
 
     url="http://stats.nba.com/stats/scoreboardv2/?leagueId=00&gameDate={datepull}&dayOffset=0".format(datepull=extractdate)
-    data = requests.get(url, timeout=5, headers=HEADERS).json()
+    data = requests.get(url, timeout=5, headers=api_headers).json()
     games=[]
     for i in data['resultSets'][0]['rowSet']:
         games.append([i[2],i[6],lookup_team_attribute(team_info,"tricode",str(i[6])),i[7],lookup_team_attribute(team_info,"tricode",str(i[7]))])
 
     return games;
 
+def scrap_box_trad(gameid):
+
+    url = "http://stats.nba.com/stats/boxscoretraditionalv2/?gameId={gID}&startPeriod=0&endPeriod=14&startRange=0&endRange=2147483647&rangeType=0".format(gID=gameid)
+    data = requests.get(url, timeout=5, headers=api_headers).json()
+    gamedata={"gameid":gameid,'players':[]}
+    dataheaders=data['resultSets'][0]['rowSet']
+    # headers: [
+    #     "GAME_ID",
+    #     "TEAM_ID",
+    #     "TEAM_ABBREVIATION",
+    #     "TEAM_CITY",
+    #     "PLAYER_ID",
+    #     "PLAYER_NAME",
+    #     "START_POSITION",
+    #     "COMMENT",
+    #     "MIN",
+    #     "FGM",
+    #     "FGA",
+    #     "FG_PCT",
+    #     "FG3M",
+    #     "FG3A",
+    #     "FG3_PCT",
+    #     "FTM",
+    #     "FTA",
+    #     "FT_PCT",
+    #     "OREB",
+    #     "DREB",
+    #     "REB",
+    #     "AST",
+    #     "STL",
+    #     "BLK",
+    #     "TO",
+    #     "PF",
+    #     "PTS",
+    #     "PLUS_MINUS"
+    # ],
+    for i in data['resultSets'][0]['rowSet']:
+        gamedata['players'].append({'player_name':i[5],
+                                    'player_id':i[4],
+                                    'starter':i[6]
+                                    })
+    return gamedata;
 
 if __name__ == "__main__":
-    global HEADERS
     team_info_path=sys.argv[1]
 
     team_info=load_team_info(team_info_path)
-    game_sample=scrap_scoreboard("11/04/2017")
-    for i in game_sample: print(i)
+    game_sample=scrap_scoreboard("10/17/2017")
+    for i in game_sample:
+        time.sleep(2)
+        sample_game_box=scrap_box_trad(i[0])
+    # print(sample_game_box)
 
