@@ -70,7 +70,8 @@ def scrap_scoreboard(extractdate,team_info):
     data = requests.get(url, timeout=5, headers=api_headers).json()
     games=[]
     for i in data['resultSets'][0]['rowSet']:
-        games.append([i[2],i[6],lookup_team_attribute(team_info,"tricode",str(i[6])),i[7],lookup_team_attribute(team_info,"tricode",str(i[7]))])
+        gamedate = i[0][0:10]
+        games.append([i[2],i[6],lookup_team_attribute(team_info,"tricode",str(i[6])),i[7],lookup_team_attribute(team_info,"tricode",str(i[7])),gamedate])
 
     return games;
 

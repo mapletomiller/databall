@@ -4,7 +4,7 @@ import bs4
 import requests
 import calendar
 import time
-
+import os
 
 def name_fixes(name):
     if name=="J.J. Barea":
@@ -34,6 +34,9 @@ def name_fixes(name):
     return fixed_name;
 def load_dfs_sal(datapath,day):
     global salaries
+    sal_info=os.path.isfile(datapath+"/DKSalaries_"+day+".csv")
+    if not sal_info:
+        open(datapath+"/DKSalaries_"+day+".csv",'a').close()
     with open(datapath+"/DKSalaries_"+day+".csv") as salary_data:
         for line in salary_data:
 
@@ -64,7 +67,8 @@ def join_dfs_data(box_name,data_return):
     return stat;
 def load_schedule(month,extract_day):
     global team_abrvs
-    with open(month+"_sched.csv",'r') as monthschedule:
+
+    with open("../resources/"+month+"_sched.csv",'r') as monthschedule:
         next(monthschedule)
         games=[]
         for line in monthschedule:
@@ -176,11 +180,11 @@ def extract_boxscore(date,hometeam,awayteam):
                 players_box[playername][elemtype] = text
     all_stat.append(players_box)
     return all_stat;
-def stat_to_csv_writer(stats,outputfile,date,team):
+def stat_to_csv_writer(stats,outputfile,date,team,opponent):
     #Write the output
     global stat_categories
     with open(outputfile,"w") as outwrite:
-        headerline="player_name|date|game_index|team|dfs_salary|dfs_position"
+        headerline="player_name|date|game_index|team|opp|dfs_salary|dfs_position"
         for statname in stat_categories["basic"]:
             headerline+="|"+statname
         for statname in stat_categories["advanced"]:
@@ -191,7 +195,7 @@ def stat_to_csv_writer(stats,outputfile,date,team):
             if player != None:
                 dfsal=join_dfs_data(player,"salary")
                 dfspos=join_dfs_data(player,"position")
-                outline=player+"|"+date+"|"+str(team_sched[team].index(extract_day)+1)+"|"+team+"|"+str(dfsal)+"|"+dfspos
+                outline=player+"|"+date+"|"+str(team_sched[team].index(extract_day)+1)+"|"+team+"|"+opponent+"|"+str(dfsal)+"|"+dfspos
                 for statcat in stat_categories["basic"]:
                     if statcat in stats[player]:
                         outline+="|"+str(stats[player][statcat])
@@ -218,7 +222,7 @@ if __name__ == "__main__":
     stat_categories={"advanced":['efg_pct','ts_pct','fg3a_per_fga_pct','fta_per_fga_pct','orb_pct','drb_pct','trb_pct','ast_pct','stl_pct','blk_pct','tov_pct','off_rtg','def_rtg','usg_pct'],"basic":['mp','fg','fga','fg_pct','fg3','fg3a','fg3_pct','ft','fta','ft_pct','pts','drb','orb','trb','ast','stl','blk','tov','pf','plus_minus']}
     month_abrvs={v: k for k,v in enumerate(calendar.month_abbr)}
     team_abrvs = {}
-    with open("Team_abrevs.csv",'r') as abrvs_file:
+    with open("../resources/"+"Team_abrevs.csv",'r') as abrvs_file:
         for line in abrvs_file:
             team_abrvs[line.split(',')[0].strip()]=str(line.split(',')[1].strip())
             team_sched[line.split(',')[1].strip()]=[]
@@ -259,8 +263,8 @@ if __name__ == "__main__":
             game_data=extract_boxscore(extract_day,ind_game[1],ind_game[2])
             print(extract_day+"|"+ind_game[1]+"|"+ind_game[2]+"|"+str(team_sched[ind_game[1]].index(extract_day)+1))
             time.sleep(2)
-            stat_to_csv_writer(game_data[0],outputpath+"/"+extract_day+ind_game[1]+".txt",extract_day,ind_game[1])
-            stat_to_csv_writer(game_data[1], outputpath + "/" + extract_day + ind_game[2] + ".txt", extract_day,ind_game[2])
+            stat_to_csv_writer(game_data[0],outputpath+"/"+extract_day+ind_game[1]+".txt",extract_day,ind_game[1],ind_game[2])
+            stat_to_csv_writer(game_data[1], outputpath + "/" + extract_day + ind_game[2] + ".txt", extract_day,ind_game[2],ind_game[1])
 
     # gsw_test=extract_boxscore("20171017","GSW","HOU","home","advanced")
     # stat_to_csv_writer(gsw_test,outputpath+"/20171017GSW.txt","20171017","GSW")
