@@ -6,6 +6,7 @@ import sys
 import pandas as pd
 import time
 import os
+import ast
 
 api_headers = {
     'origin': ('http://stats.nba.com'),
@@ -101,8 +102,8 @@ def scrape_pbp(game_id,starters,game_info,manual_subs):
     #     "PLAYER3_TEAM_ABBREVIATION"
     # ],
     # pbp_DF[pbp_DF['EVENTMSGTYPE'].apply(lambda x: x in [1,2])]
-    pbp_DF['HOME_ONCOURT'] = [list(starters.loc[starters['TEAM_ID'] == game_info[1],'PLAYER_NAME'])] * len(pbp_DF)
-    pbp_DF['AWAY_ONCOURT'] = [list(starters.loc[starters['TEAM_ID'] == game_info[3],'PLAYER_NAME'])] * len(pbp_DF)
+    pbp_DF['HOME_ONCOURT'] = [sorted(list(starters.loc[starters['TEAM_ID'] == game_info[1],'PLAYER_NAME']))] * len(pbp_DF)
+    pbp_DF['AWAY_ONCOURT'] = [sorted(list(starters.loc[starters['TEAM_ID'] == game_info[3],'PLAYER_NAME']))] * len(pbp_DF)
     #
     substitution_oncourt(pbp_DF,starters,game_info,manual_subs)
     # print(pbp_DF.loc[38:44])
@@ -407,6 +408,10 @@ def pull_pbp_date(extractdate,team_info_path,pbpoutput_path,onegame_pull):
         gamepbp=scrape_pbp(i[0],gamestarters,i,manual_subs)
         tme_pbp=time.time()
         print("PBP Extract Time: "+str(tme_pbp-tms_pbp))
+        gamepbp['AWAY_ONCOURT_sort'] = gamepbp['AWAY_ONCOURT'].apply(lambda x: sorted(x))
+        gamepbp['HOME_ONCOURT_sort'] = gamepbp['HOME_ONCOURT'].apply(lambda x: sorted(x))
+        tme_srtln=time.time()
+        print("SORT LINEUP TIME: "+str(tme_srtln-tme_pbp))
         gamepbp.to_csv(pbpoutput_path+"pbp/pbp_"+str(i[5])+"_"+str(i[0])+"_"+str(i[2])+str(i[4])+".txt",index=False,na_rep="",float_format='%.0f',sep="|")
 
 if __name__ == "__main__":

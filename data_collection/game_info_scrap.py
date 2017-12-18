@@ -67,7 +67,7 @@ def scrap_scoreboard(extractdate,team_info):
     # ],
 
     url="http://stats.nba.com/stats/scoreboardv2/?leagueId=00&gameDate={datepull}&dayOffset=0".format(datepull=extractdate)
-    data = requests.get(url, timeout=5, headers=api_headers).json()
+    data = requests.get(url, timeout=15, headers=api_headers).json()
     games=[]
     for i in data['resultSets'][0]['rowSet']:
         gamedate = i[0][0:10]
